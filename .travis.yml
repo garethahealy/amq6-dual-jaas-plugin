@@ -1,5 +1,10 @@
 sudo: required
 dist: trusty
+addons:
+  sonarcloud:
+    organization: "garethahealy-github"
+    token:
+      secure: l9e6qXrZjhM8Sf7fFXSBXaV8ouhBUy8UYu2CfuW5vBSfG+m6Z3gHQyQZMaF21LcG2DbNvwHAoLvc6XzAbvLFNZKOwXGy6oFyoIxoRMy878k3wKch+09FVhUm53/OPwdrXFfU4oSI9reJC+Y8S9w6cGWoW9DFA5IjBNroj3ziKVAySnh77czpFF88d6HO3PY8U4C5Mq9N0HbH5MhXX72ZRgJqLL29H0uP2PgBMzbLoOu4JqelNbtdiy55Egy94HfAKD6wnH6zm87lH6s35Cdic18iolBAmGsbk+UrdL03nQ5ARrgQ8NnSi6/eiIwzHBtz/DX7F3OvvdOyQo+Cp9pJ2B2HocKc3l7gOFfLP1Om8iUygrsLFYwvwu9phmp1stGdl3d3RorUSmnglGZwVNMIK8o0cFc0xeBIFqP9qOEmCn+flCJoqc9Kcdln4Spk6QkEea6IHf1Bc1L6TTi3bxVAqtsO49/cp6clPhD7tskMwvBgB7hDWF7awAp2Z+X78jrEDZ0QG9swfqpdfmW0cLi5s9hsAQcgqpzh/8+lZ0hQdn6iPm0od4ezSta3rz4v7X90qdwtjnlA6+GLGhEy3QBMhEjt5MJGG8mZfAz0f3txxi+nhAMMswS7Fn5v1PD6RzHWCwUnwb9LMg28//ebLVMmGXXtmTKPuOM1pu7TdJXEngI=
 env:
   global:
   - secure: PV+6RnajVsSs8onM/zR6Vv8FANT0Br7gVYe8x9oj1Ku0C6W0DTlEKzHvAZXuX0uB23VJF4mwt/HK7/ukOKe/oHaH6HbOYP/tqetaWRlsyY6pcEXW7C2LGqU2CrbAJ6Qh2Pd/FLdDswUEQSroBrc14BQCd+qBIU2BmUbOfxqWdRQNC+u6QJEsoLPeyYTV9/xBdEpmesNRE9ZnaqDSUX9E4W8zongrnGFZr80u9P40duQvpJATlNEnJ4DF2gpuI6R2pDPosxNywa+yS9rbZi7aXlamefg6IqcBh4f4A6T4DB1PXnbNmiY+TAKZ1hZnFF0/7Mz5othrX9wm6VGXpNyaDTtDDmueuIBB9gEsfZk7kSNa7Eyp9OULNJ8vAFv8xnXoZYab2YOoJ1QT+TFQce1lnWVRCDmD+MrUEp71a7DfbH0iiyUP7W7xCOi7YR5h4rPWFLwAzC867evkDdr5a5SGAObjGyZ/Bhro5UMmeSfu93GphGIh5Ld97KVo8YYV5NNZqb/mCu1wc2WY4VEBP5FPY0/m+JqSEfg6W5/vLEmIseSLrJ+PXF70UWo/Yqhih9Y6L3OoswSR3S2vENM+U/7BVXujaAJ9Gri5YtiBUhr7P39njrh4W0cPANCNi5g088+GaI2HjYA4LSceNSU9zfHNeJJ++lQu/sHfQQ+YhN90xbc=
@@ -19,11 +24,16 @@ before_script:
 - mvn dependency:resolve-plugins dependency:resolve -B -Prelease-ossrh
 script:
 - mvn clean install -B
+- mvn clean org.jacoco:jacoco-maven-plugin:prepare-agent package sonar:sonar -B
 deploy:
   provider: script
   script: bash .travis/deploy.sh
   skip_cleanup: true
+  on:
+    tags: false
+    all_branches: true
 cache:
   directories:
   - $HOME/.m2
   - $HOME/.victims
+  - $HOME/.sonar/cache

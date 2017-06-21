@@ -25,15 +25,20 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.EmptyBroker;
+import org.apache.activemq.broker.TransportConnectionState;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ConnectionInfo;
-import org.apache.activemq.network.NetworkConnector;
 import org.apache.activemq.security.JaasAuthenticationBroker;
 import org.apache.activemq.security.JaasCertificateAuthenticationBroker;
 import org.apache.activemq.security.JaasDualAuthenticationBroker;
 import org.apache.activemq.security.SecurityContext;
+import org.apache.activemq.state.ConnectionState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthenticationBroker {
+
+    private static final Logger LOG = LoggerFactory.getLogger(JaasDualAuthenticationNetworkConnectorBroker.class);
 
     private final JaasCertificateAuthenticationBroker certificateAuthenticationBroker;
     private final JaasAuthenticationBroker authenticationBroker;
@@ -41,13 +46,17 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthen
     public JaasDualAuthenticationNetworkConnectorBroker(Broker next, String jaasConfiguration, String jaasSslConfiguration) {
         super(next, jaasConfiguration, jaasSslConfiguration);
 
+        LOG.info("Loading {}", JaasDualAuthenticationNetworkConnectorBroker.class.getCanonicalName());
+
         this.authenticationBroker = new JaasAuthenticationBroker(new EmptyBroker(), jaasConfiguration);
         this.certificateAuthenticationBroker = new JaasCertificateAuthenticationBroker(new EmptyBroker(), jaasSslConfiguration);
     }
 
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-        if (isSSL(context, info)) {
+        LOG.info("addConnection");
+
+        if (isSSLConnector(context, info)) {
             if (isNetworkConnector(context)) {
                 this.certificateAuthenticationBroker.addConnection(context, info);
             } else {
@@ -58,7 +67,9 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthen
 
     @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-        if (isSSL(context, info)) {
+        LOG.info("removeConnection");
+
+        if (isSSLConnector(context, info)) {
             if (isNetworkConnector(context)) {
                 this.certificateAuthenticationBroker.removeConnection(context, info, error);
             } else {
@@ -69,6 +80,8 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthen
 
     @Override
     public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
+        LOG.info("authenticate; {}", username);
+
         if (username == null || username.trim().length() <= 0) {
             return this.certificateAuthenticationBroker.authenticate(username, password, peerCertificates);
         } else {
@@ -76,10 +89,10 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthen
         }
     }
 
-    private boolean isSSL(ConnectionContext context, ConnectionInfo info) throws Exception {
+    private boolean isSSLConnector(ConnectionContext context, ConnectionInfo info) throws Exception {
         boolean sslCapable = false;
         Connector connector = context.getConnector();
-        if (connector instanceof TransportConnector) {
+        if (connector != null && connector instanceof TransportConnector) {
             TransportConnector transportConnector = (TransportConnector)connector;
             sslCapable = transportConnector.getServer().isSslServer();
         }
@@ -89,12 +102,25 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthen
             sslCapable = true;
         }
 
+        LOG.info("isSSL; {}", sslCapable);
         return sslCapable;
     }
 
     private boolean isNetworkConnector(ConnectionContext context) throws Exception {
-        Connector connector = context.getConnector();
+        boolean isNetworkConnection = false;
 
-        return connector instanceof NetworkConnector;
+        ConnectionState connectionState = context.getConnectionState();
+        if (connectionState != null && connectionState instanceof TransportConnectionState) {
+            TransportConnectionState transportConnectionState = (TransportConnectionState)connectionState;
+            isNetworkConnection = transportConnectionState.getConnection().isNetworkConnection();
+        }
+
+        if (!isNetworkConnection && context.getConnectionId() != null) {
+            isNetworkConnection = context.getConnectionId().getValue().contains("->");
+        }
+
+        LOG.info("isNetworkConnector; {}", isNetworkConnection);
+
+        return isNetworkConnection;
     }
 }
