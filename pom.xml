@@ -11,7 +11,7 @@
     </parent>
     <groupId>com.garethahealy.amq6-dual-jaas-plugin</groupId>
     <artifactId>amq6-dual-jaas-plugin-parent</artifactId>
-    <packaging>pom</packaging>
+    <packaging>jar</packaging>
     <version>1.0.0-SNAPSHOT</version>
     <name>GarethHealy :: AMQ6 Dual JAAS Plugin</name>
 
@@ -20,5 +20,13 @@
         <developerConnection>scm:git:https://github.com/garethahealy/amq6-dual-jaas-plugin/tree/master</developerConnection>
         <url>https://github.com/garethahealy/amq6-dual-jaas-plugin/tree/master</url>
     </scm>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-broker</artifactId>
+            <version>5.11.0.redhat-621159</version>
+        </dependency>
+    </dependencies>
 
 </project>
