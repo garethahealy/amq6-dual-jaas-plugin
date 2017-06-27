@@ -40,7 +40,6 @@ import org.apache.activemq.security.StubLoginModule;
 import org.apache.activemq.transport.TransportServer;
 import org.junit.BeforeClass;
 import org.junit.Test;
-import org.mockito.Mock;
 import org.mockito.Mockito;
 
 import static org.junit.Assert.assertNotNull;
@@ -125,7 +124,7 @@ public class JaasDualAuthenticationNetworkConnectorBrokerTest {
 
         TransportConnection mockedTransportConnection = Mockito.mock(TransportConnection.class);
         Mockito.when(mockedTransportConnection.isNetworkConnection()).thenReturn(true);
-        
+
         TransportConnectionState mockedTransportConnectionState = Mockito.mock(TransportConnectionState.class);
         Mockito.when(mockedTransportConnectionState.getConnection()).thenReturn(mockedTransportConnection);
 
