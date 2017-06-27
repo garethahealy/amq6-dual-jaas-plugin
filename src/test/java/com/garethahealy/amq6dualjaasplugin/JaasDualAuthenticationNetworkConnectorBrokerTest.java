@@ -164,6 +164,15 @@ public class JaasDualAuthenticationNetworkConnectorBrokerTest {
     }
 
     @Test
+    public void canAuthenticateForSSLWithEmptyUsername() {
+        AuthenticationBroker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
+
+        assertNotNull(broker);
+
+        broker.authenticate(" ", null, new ArrayList<X509Certificate>().toArray(new X509Certificate[0]));
+    }
+
+    @Test
     public void canAuthenticateForProperties() {
         AuthenticationBroker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
 
