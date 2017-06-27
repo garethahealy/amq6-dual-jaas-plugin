@@ -12,7 +12,7 @@
     <groupId>com.garethahealy.amq6-dual-jaas-plugin</groupId>
     <artifactId>amq6-dual-jaas-plugin-parent</artifactId>
     <packaging>jar</packaging>
-    <version>1.1.0-SNAPSHOT</version>
+    <version>1.1.0</version>
     <name>GarethHealy :: AMQ6 Dual JAAS Plugin</name>
 
     <scm>
