@@ -4,7 +4,10 @@
 [![License](https://img.shields.io/hexpm/l/plug.svg?maxAge=2592000)]()
 
 # amq6-dual-jaas-plugin
-Usage:
+This plugin is a customization and extension of the ActiveMQ JaasDualAuthenticationPlugin.
+It allows clients to connect via username/password and Network of Brokers via certificates, both over SSL.
+
+## Usage
 
     <broker>
     
