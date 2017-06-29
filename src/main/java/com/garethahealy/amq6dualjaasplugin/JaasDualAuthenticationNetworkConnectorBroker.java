@@ -48,7 +48,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthen
 
         LOG.info("Loading {}", JaasDualAuthenticationNetworkConnectorBroker.class.getCanonicalName());
 
-        this.authenticationBroker = new JaasAuthenticationBroker(new EmptyBroker(), jaasConfiguration);
+        this.authenticationBroker = new LoggingJaasAuthenticationBroker(new EmptyBroker(), jaasConfiguration);
         this.certificateAuthenticationBroker = new JaasCertificateAuthenticationBroker(new EmptyBroker(), jaasSslConfiguration);
     }
 
