@@ -21,10 +21,6 @@ package com.garethahealy.amq6dualjaasplugin;
 
 import java.security.cert.X509Certificate;
 import java.util.ArrayList;
-import java.util.HashMap;
-
-import javax.security.auth.login.AppConfigurationEntry;
-import javax.security.auth.login.Configuration;
 
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
@@ -35,8 +31,6 @@ import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.security.AuthenticationBroker;
-import org.apache.activemq.security.StubDualJaasConfiguration;
-import org.apache.activemq.security.StubLoginModule;
 import org.apache.activemq.transport.TransportServer;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -44,35 +38,10 @@ import org.mockito.Mockito;
 
 import static org.junit.Assert.assertNotNull;
 
-public class JaasDualAuthenticationNetworkConnectorBrokerTest {
+public class JaasDualAuthenticationNetworkConnectorBrokerTest extends BrokerTestSupport {
 
-    private static final String INSECURE_GROUP = "insecureGroup";
-    private static final String INSECURE_USERNAME = "insecureUserName";
-    private static final String DN_GROUP = "dnGroup";
-    private static final String DN_USERNAME = "dnUserName";
-
-    private static final String JAAS_STUB = "org.apache.activemq.security.StubLoginModule";
     private static final String JAAS_NON_SSL = "activemq-domain";
     private static final String JAAS_SSL = "activemq-cert";
-
-    static void createLoginConfig() {
-        HashMap<String, String> sslConfigOptions = new HashMap<String, String>();
-        sslConfigOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, "true");
-        sslConfigOptions.put(StubLoginModule.USERS_PROPERTY, DN_USERNAME);
-        sslConfigOptions.put(StubLoginModule.GROUPS_PROPERTY, DN_GROUP);
-        AppConfigurationEntry sslConfigEntry = new AppConfigurationEntry(JAAS_STUB, AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, sslConfigOptions);
-
-        HashMap<String, String> configOptions = new HashMap<String, String>();
-        configOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, "true");
-        configOptions.put(StubLoginModule.USERS_PROPERTY, INSECURE_USERNAME);
-        configOptions.put(StubLoginModule.GROUPS_PROPERTY, INSECURE_GROUP);
-
-        AppConfigurationEntry configEntry = new AppConfigurationEntry(JAAS_STUB, AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, configOptions);
-
-        StubDualJaasConfiguration jaasConfig = new StubDualJaasConfiguration(configEntry, sslConfigEntry);
-
-        Configuration.setConfiguration(jaasConfig);
-    }
 
     @BeforeClass
     public static void setUp() throws Exception {
