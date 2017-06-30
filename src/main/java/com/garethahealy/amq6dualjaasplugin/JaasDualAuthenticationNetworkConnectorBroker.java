@@ -25,7 +25,6 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Connector;
-import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.broker.TransportConnectionState;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ActiveMQDestination;
