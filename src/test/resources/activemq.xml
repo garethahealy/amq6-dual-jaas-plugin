@@ -52,7 +52,7 @@
             </list>
         </property>
     </bean>
-    
+
     <!--
         The <broker> element is used to configure the ActiveMQ broker.
     -->

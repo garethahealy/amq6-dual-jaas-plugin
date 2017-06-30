@@ -95,6 +95,8 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
 
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+        LOG.info("-> removeDestination; {}", context.getClientId());
+
         if (isNetworkConnector(context)) {
             this.certificateAuthenticationBroker.removeDestination(context, destination, timeout);
         } else {

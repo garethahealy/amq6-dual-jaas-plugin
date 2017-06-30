@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.EmptyBroker;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.security.AuthenticationBroker;
 import org.junit.BeforeClass;
@@ -103,6 +104,26 @@ public class JaasDualAuthenticationNetworkConnectorBrokerTest extends BrokerTest
 
         Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
         broker.removeConnection(Mockito.mock(ConnectionContext.class), mockedConnectionInfo, null);
+    }
+
+    @Test
+    public void canRemoveDestination() throws Exception {
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        broker.removeDestination(Mockito.mock(ConnectionContext.class), Mockito.mock(ActiveMQDestination.class), 0);
+    }
+
+    @Test
+    public void canRemoveDestinationForSSL() throws Exception {
+        ConnectionContext mockedConnectionContext = getMockedConnectionContext();
+
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        broker.removeDestination(mockedConnectionContext, Mockito.mock(ActiveMQDestination.class), 0);
+    }
+
+    @Test
+    public void canRemoveDestinationForProperties() throws Exception {
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        broker.removeDestination(Mockito.mock(ConnectionContext.class), Mockito.mock(ActiveMQDestination.class), 0);
     }
 
     @Test
