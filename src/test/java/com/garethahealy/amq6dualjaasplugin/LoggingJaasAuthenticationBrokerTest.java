@@ -24,6 +24,7 @@ import java.util.ArrayList;
 
 import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.security.AuthenticationBroker;
+import org.apache.activemq.security.SecurityContext;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -41,9 +42,9 @@ public class LoggingJaasAuthenticationBrokerTest extends BrokerTestSupport {
     @Test
     public void canAuthenticate() {
         AuthenticationBroker broker = new LoggingJaasAuthenticationBroker(new EmptyBroker(), JAAS_NON_SSL);
+        SecurityContext securityContext = broker.authenticate("admin", "admin", new ArrayList<X509Certificate>().toArray(new X509Certificate[0]));
 
         assertNotNull(broker);
-
-        broker.authenticate("admin", "admin", new ArrayList<X509Certificate>().toArray(new X509Certificate[0]));
+        assertNotNull(securityContext);
     }
 }

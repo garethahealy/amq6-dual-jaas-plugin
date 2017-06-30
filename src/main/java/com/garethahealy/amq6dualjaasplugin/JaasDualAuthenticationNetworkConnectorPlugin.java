@@ -19,26 +19,71 @@
  */
 package com.garethahealy.amq6dualjaasplugin;
 
+import java.util.Arrays;
+
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.security.JaasDualAuthenticationPlugin;
+import org.apache.activemq.filter.DefaultDestinationMapEntry;
+import org.apache.activemq.filter.DestinationMapEntry;
+import org.apache.activemq.security.AuthorizationEntry;
+import org.apache.activemq.security.AuthorizationMap;
+import org.apache.activemq.security.DefaultAuthorizationMap;
+import org.apache.activemq.security.JaasAuthenticationPlugin;
+import org.apache.activemq.security.SimpleAuthorizationMap;
+import org.apache.activemq.security.TempDestinationAuthorizationEntry;
 
-public class JaasDualAuthenticationNetworkConnectorPlugin extends JaasDualAuthenticationPlugin {
+public class JaasDualAuthenticationNetworkConnectorPlugin extends JaasAuthenticationPlugin {
 
-    private String sslConfiguration = "activemq-ssl-domain";
+    private String jaasCertificateConfiguration = "activemq-cert";
+    private AuthorizationMap jaasConfigurationAuthorizationMap;
 
     @Override
     public Broker installPlugin(Broker broker) {
         initialiseJaas();
-        return new JaasDualAuthenticationNetworkConnectorBroker(broker, configuration, sslConfiguration);
+
+        return new JaasDualAuthenticationNetworkConnectorBroker(broker, configuration, jaasCertificateConfiguration, jaasConfigurationAuthorizationMap);
     }
 
-    @Override
-    public void setSslConfiguration(String sslConfiguration) {
-        this.sslConfiguration = sslConfiguration;
+    public AuthorizationMap defaultAuthorizationMap() {
+        TempDestinationAuthorizationEntry tempDestination = new TempDestinationAuthorizationEntry();
+        AuthorizationEntry authorizationEntry = new AuthorizationEntry();
+        try {
+            tempDestination.setAdmin("admin");
+            authorizationEntry.setAdmin("admin");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        //queue names
+        DefaultDestinationMapEntry devQueue = new DefaultDestinationMapEntry();
+        devQueue.setQueue("DEV.>");
+        devQueue.setValue(authorizationEntry);
+
+        DefaultAuthorizationMap adminACLs = new DefaultAuthorizationMap(Arrays.asList((DestinationMapEntry)devQueue));
+        DefaultAuthorizationMap readACLs = new DefaultAuthorizationMap(Arrays.asList((DestinationMapEntry)devQueue));
+        DefaultAuthorizationMap writeACLs = new DefaultAuthorizationMap(Arrays.asList((DestinationMapEntry)devQueue));
+
+        SimpleAuthorizationMap simpleAuthorizationMap = new SimpleAuthorizationMap();
+        simpleAuthorizationMap.setAdminACLs(adminACLs);
+        simpleAuthorizationMap.setReadACLs(readACLs);
+        simpleAuthorizationMap.setWriteACLs(writeACLs);
+        simpleAuthorizationMap.setTempDestinationAuthorizationEntry(tempDestination);
+
+        return simpleAuthorizationMap;
     }
 
-    @Override
-    public String getSslConfiguration() {
-        return sslConfiguration;
+    public String getJaasCertificateConfiguration() {
+        return jaasCertificateConfiguration;
+    }
+
+    public void setJaasCertificateConfiguration(String jaasCertificateConfiguration) {
+        this.jaasCertificateConfiguration = jaasCertificateConfiguration;
+    }
+
+    public AuthorizationMap getJaasConfigurationAuthorizationMap() {
+        return jaasConfigurationAuthorizationMap;
+    }
+
+    public void setJaasConfigurationAuthorizationMap(AuthorizationMap jaasConfigurationAuthorizationMap) {
+        this.jaasConfigurationAuthorizationMap = jaasConfigurationAuthorizationMap;
     }
 }

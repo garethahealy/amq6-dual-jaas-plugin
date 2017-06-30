@@ -36,8 +36,8 @@ public class JaasDualAuthenticationNetworkConnectorPluginTest {
     @Test
     public void canGetSetSslConfiguration() throws Exception {
         JaasDualAuthenticationNetworkConnectorPlugin plugin = new JaasDualAuthenticationNetworkConnectorPlugin();
-        plugin.setSslConfiguration("test");
+        plugin.setJaasCertificateConfiguration("test");
 
-        assertEquals("test", plugin.getSslConfiguration());
+        assertEquals("test", plugin.getJaasCertificateConfiguration());
     }
 }

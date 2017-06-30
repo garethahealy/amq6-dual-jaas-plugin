@@ -34,7 +34,7 @@ import static org.junit.Assert.assertNotNull;
 public class PropertiesLoaderTest extends PropertiesLoader {
 
     @Test
-    public void users() {
+    public void canGetUsers() {
         URL url = PropertiesLoaderTest.class.getResource("/user.properties");
         String root = FilenameUtils.getPath(url.getPath());
         Map<String, String> options = new HashMap<String, String>();

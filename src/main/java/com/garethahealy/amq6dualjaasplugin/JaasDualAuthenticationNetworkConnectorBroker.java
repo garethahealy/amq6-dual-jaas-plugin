@@ -22,39 +22,54 @@ package com.garethahealy.amq6dualjaasplugin;
 import java.security.cert.X509Certificate;
 
 import org.apache.activemq.broker.Broker;
+import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Connector;
 import org.apache.activemq.broker.EmptyBroker;
 import org.apache.activemq.broker.TransportConnectionState;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.security.AuthenticationBroker;
+import org.apache.activemq.security.AuthorizationBroker;
+import org.apache.activemq.security.AuthorizationMap;
 import org.apache.activemq.security.JaasAuthenticationBroker;
 import org.apache.activemq.security.JaasCertificateAuthenticationBroker;
-import org.apache.activemq.security.JaasDualAuthenticationBroker;
 import org.apache.activemq.security.SecurityContext;
 import org.apache.activemq.state.ConnectionState;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthenticationBroker {
+public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter implements AuthenticationBroker {
 
     private static final Logger LOG = LoggerFactory.getLogger(JaasDualAuthenticationNetworkConnectorBroker.class);
 
     private final JaasCertificateAuthenticationBroker certificateAuthenticationBroker;
     private final JaasAuthenticationBroker authenticationBroker;
 
-    public JaasDualAuthenticationNetworkConnectorBroker(Broker next, String jaasConfiguration, String jaasSslConfiguration) {
-        super(next, jaasConfiguration, jaasSslConfiguration);
+    public JaasDualAuthenticationNetworkConnectorBroker(Broker next, String jaasConfiguration, String jaasCertificateConfiguration,
+                                                        AuthorizationMap jaasConfigurationAuthorizationMap) {
+        super(next);
 
-        LOG.info("Loading {}", JaasDualAuthenticationNetworkConnectorBroker.class.getCanonicalName());
+        LOG.info("Loading {} - {} / {}", JaasDualAuthenticationNetworkConnectorBroker.class.getCanonicalName(), jaasConfiguration, jaasCertificateConfiguration);
 
-        this.authenticationBroker = new LoggingJaasAuthenticationBroker(new EmptyBroker(), jaasConfiguration);
-        this.certificateAuthenticationBroker = new JaasCertificateAuthenticationBroker(new EmptyBroker(), jaasSslConfiguration);
+        Broker jaasConfigurationAuthorizationBroker = jaasConfigurationAuthorizationMap == null ? next : new AuthorizationBroker(next, jaasConfigurationAuthorizationMap);
+
+        this.authenticationBroker = new LoggingJaasAuthenticationBroker(jaasConfigurationAuthorizationBroker, jaasConfiguration);
+        this.certificateAuthenticationBroker = new JaasCertificateAuthenticationBroker(next, jaasCertificateConfiguration);
+    }
+
+    public JaasCertificateAuthenticationBroker getCertificateAuthenticationBroker() {
+        return certificateAuthenticationBroker;
+    }
+
+    public JaasAuthenticationBroker getAuthenticationBroker() {
+        return authenticationBroker;
     }
 
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-        LOG.info("addConnection");
+        LOG.info("addConnection; {}", context.getClientId());
 
         if (isSSLConnector(context, info)) {
             if (isNetworkConnector(context)) {
@@ -67,7 +82,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthen
 
     @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-        LOG.info("removeConnection");
+        LOG.info("removeConnection; {}", context.getClientId());
 
         if (isSSLConnector(context, info)) {
             if (isNetworkConnector(context)) {
@@ -79,8 +94,17 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthen
     }
 
     @Override
+    public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
+        if (isNetworkConnector(context)) {
+            this.certificateAuthenticationBroker.removeDestination(context, destination, timeout);
+        } else {
+            this.authenticationBroker.removeDestination(context, destination, timeout);
+        }
+    }
+
+    @Override
     public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
-        LOG.info("authenticate; {}", username);
+        LOG.info("-> authenticate; {}", username);
 
         if (username == null || username.trim().length() <= 0) {
             return this.certificateAuthenticationBroker.authenticate(username, password, peerCertificates);
@@ -102,7 +126,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthen
             sslCapable = true;
         }
 
-        LOG.info("isSSL; {}", sslCapable);
+        LOG.info("-> isSSL; {}", sslCapable);
         return sslCapable;
     }
 
@@ -119,7 +143,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends JaasDualAuthen
             isNetworkConnection = context.getConnectionId().getValue().contains("->");
         }
 
-        LOG.info("isNetworkConnector; {}", isNetworkConnection);
+        LOG.info("-> isNetworkConnector; {}", isNetworkConnection);
 
         return isNetworkConnection;
     }

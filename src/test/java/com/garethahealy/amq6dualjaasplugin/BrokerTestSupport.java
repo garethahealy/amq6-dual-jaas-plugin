@@ -19,13 +19,24 @@
  */
 package com.garethahealy.amq6dualjaasplugin;
 
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.cert.X509Certificate;
 import java.util.HashMap;
 
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
 
+import org.apache.activemq.broker.ConnectionContext;
+import org.apache.activemq.broker.TransportConnection;
+import org.apache.activemq.broker.TransportConnectionState;
+import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.command.ConnectionId;
+import org.apache.activemq.command.ConnectionInfo;
 import org.apache.activemq.security.StubDualJaasConfiguration;
 import org.apache.activemq.security.StubLoginModule;
+import org.apache.activemq.transport.TransportServer;
+import org.mockito.Mockito;
 
 public abstract class BrokerTestSupport {
 
@@ -53,5 +64,39 @@ public abstract class BrokerTestSupport {
         StubDualJaasConfiguration jaasConfig = new StubDualJaasConfiguration(configEntry, sslConfigEntry);
 
         Configuration.setConfiguration(jaasConfig);
+    }
+
+    protected ConnectionContext getMockedConnectionContext() {
+        ConnectionContext mockedConnectionContext = Mockito.mock(ConnectionContext.class);
+        Mockito.when(mockedConnectionContext.getConnectionId()).thenReturn(new ConnectionId("brokera->brokerb"));
+
+        return mockedConnectionContext;
+    }
+
+    protected ConnectionContext getMockedConnectionContextWithSSL() throws IOException, URISyntaxException {
+        TransportServer mockedTransportServer = Mockito.mock(TransportServer.class);
+        Mockito.when(mockedTransportServer.isSslServer()).thenReturn(true);
+
+        TransportConnector mockedTransportConnector = Mockito.mock(TransportConnector.class);
+        Mockito.when(mockedTransportConnector.getServer()).thenReturn(mockedTransportServer);
+
+        TransportConnection mockedTransportConnection = Mockito.mock(TransportConnection.class);
+        Mockito.when(mockedTransportConnection.isNetworkConnection()).thenReturn(true);
+
+        TransportConnectionState mockedTransportConnectionState = Mockito.mock(TransportConnectionState.class);
+        Mockito.when(mockedTransportConnectionState.getConnection()).thenReturn(mockedTransportConnection);
+
+        ConnectionContext mockedConnectionContext = getMockedConnectionContext();
+        Mockito.when(mockedConnectionContext.getConnector()).thenReturn(mockedTransportConnector);
+        Mockito.when(mockedConnectionContext.getConnectionState()).thenReturn(mockedTransportConnectionState);
+
+        return mockedConnectionContext;
+    }
+
+    protected ConnectionInfo getMockedConnectionInfo() {
+        ConnectionInfo mockedConnectionInfo = Mockito.mock(ConnectionInfo.class);
+        Mockito.when(mockedConnectionInfo.getTransportContext()).thenReturn(new X509Certificate[0]);
+
+        return mockedConnectionInfo;
     }
 }

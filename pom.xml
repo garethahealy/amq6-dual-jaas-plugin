@@ -12,8 +12,13 @@
     <groupId>com.garethahealy.amq6-dual-jaas-plugin</groupId>
     <artifactId>amq6-dual-jaas-plugin-parent</artifactId>
     <packaging>jar</packaging>
-    <version>1.2.0-BETA1</version>
+    <version>1.2.0-BETA2</version>
     <name>GarethHealy :: AMQ6 Dual JAAS Plugin</name>
+
+    <properties>
+        <activemq.version>5.11.0.redhat-621159</activemq.version>
+        <spring-version>3.2.16.RELEASE</spring-version>
+    </properties>
 
     <scm>
         <connection>scm:git:https://github.com/garethahealy/amq6-dual-jaas-plugin/tree/master</connection>
@@ -25,15 +30,37 @@
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-broker</artifactId>
-            <version>5.11.0.redhat-621159</version>
+            <version>${activemq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-kahadb-store</artifactId>
+            <version>${activemq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.activemq</groupId>
+            <artifactId>activemq-spring</artifactId>
+            <version>${activemq.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring-version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.activemq</groupId>
             <artifactId>activemq-jaas</artifactId>
-            <version>5.11.0.redhat-621159</version>
+            <version>${activemq.version}</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>org.apache.activemq.tooling</groupId>
+            <artifactId>activemq-junit</artifactId>
+            <version>5.14.0</version>
+            <scope>test</scope>
+        </dependency>
+
         <dependency>
             <groupId>commons-io</groupId>
             <artifactId>commons-io</artifactId>
