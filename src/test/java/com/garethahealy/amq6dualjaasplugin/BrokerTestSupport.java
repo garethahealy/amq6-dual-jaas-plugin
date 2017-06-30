@@ -21,8 +21,10 @@ package com.garethahealy.amq6dualjaasplugin;
 
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.security.cert.X509Certificate;
 import java.util.HashMap;
+import java.util.Map;
 
 import javax.security.auth.login.AppConfigurationEntry;
 import javax.security.auth.login.Configuration;
@@ -33,9 +35,12 @@ import org.apache.activemq.broker.TransportConnectionState;
 import org.apache.activemq.broker.TransportConnector;
 import org.apache.activemq.command.ConnectionId;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.jaas.PropertiesLoginModule;
+import org.apache.activemq.jaas.TextFileCertificateLoginModule;
 import org.apache.activemq.security.StubDualJaasConfiguration;
 import org.apache.activemq.security.StubLoginModule;
 import org.apache.activemq.transport.TransportServer;
+import org.apache.commons.io.FilenameUtils;
 import org.mockito.Mockito;
 
 public abstract class BrokerTestSupport {
@@ -47,7 +52,7 @@ public abstract class BrokerTestSupport {
 
     private static final String JAAS_STUB = "org.apache.activemq.security.StubLoginModule";
 
-    protected static void createLoginConfig() {
+    protected static void createStubbedLoginConfig() {
         HashMap<String, String> sslConfigOptions = new HashMap<String, String>();
         sslConfigOptions.put(StubLoginModule.ALLOW_LOGIN_PROPERTY, "true");
         sslConfigOptions.put(StubLoginModule.USERS_PROPERTY, DN_USERNAME);
@@ -60,6 +65,30 @@ public abstract class BrokerTestSupport {
         configOptions.put(StubLoginModule.GROUPS_PROPERTY, INSECURE_GROUP);
 
         AppConfigurationEntry configEntry = new AppConfigurationEntry(JAAS_STUB, AppConfigurationEntry.LoginModuleControlFlag.REQUIRED, configOptions);
+
+        StubDualJaasConfiguration jaasConfig = new StubDualJaasConfiguration(configEntry, sslConfigEntry);
+
+        Configuration.setConfiguration(jaasConfig);
+    }
+
+    protected static void createRealLoginConfig() {
+        URL url = PropertiesLoaderTest.class.getResource("/users.properties");
+        String root = FilenameUtils.getPath(url.getPath());
+
+        HashMap<String, String> sslConfigOptions = new HashMap<String, String>();
+        sslConfigOptions.put("debug", "true");
+        sslConfigOptions.put("baseDir", "/" + root);
+        sslConfigOptions.put("org.apache.activemq.jaas.textfiledn.user", "users.properties");
+        sslConfigOptions.put("org.apache.activemq.jaas.textfiledn.group", "groups.properties");
+
+        HashMap<String, String> configOptions = new HashMap<String, String>();
+        configOptions.put("baseDir", "/" + root);
+        configOptions.put("debug", "true");
+        configOptions.put("org.apache.activemq.jaas.properties.user", "users.properties");
+        configOptions.put("org.apache.activemq.jaas.properties.group", "groups.properties");
+
+        AppConfigurationEntry sslConfigEntry = new AppConfigurationEntry(TextFileCertificateLoginModule.class.getName(), AppConfigurationEntry.LoginModuleControlFlag.SUFFICIENT, sslConfigOptions);
+        AppConfigurationEntry configEntry = new AppConfigurationEntry(PropertiesLoginModule.class.getName(), AppConfigurationEntry.LoginModuleControlFlag.SUFFICIENT, configOptions);
 
         StubDualJaasConfiguration jaasConfig = new StubDualJaasConfiguration(configEntry, sslConfigEntry);
 

@@ -41,19 +41,19 @@ public class JaasDualAuthenticationNetworkConnectorBrokerTest extends BrokerTest
 
     @BeforeClass
     public static void setUp() throws Exception {
-        createLoginConfig();
+        createStubbedLoginConfig();
     }
 
     @Test
     public void canCreate() {
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
 
         assertNotNull(broker);
     }
 
     @Test
     public void canAddConnection() throws Exception {
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.addConnection(Mockito.mock(ConnectionContext.class), Mockito.mock(ConnectionInfo.class));
     }
 
@@ -62,7 +62,7 @@ public class JaasDualAuthenticationNetworkConnectorBrokerTest extends BrokerTest
         ConnectionContext mockedConnectionContext = getMockedConnectionContext();
         ConnectionInfo mockedConnectionInfo = getMockedConnectionInfo();
 
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.addConnection(mockedConnectionContext, mockedConnectionInfo);
     }
 
@@ -71,7 +71,7 @@ public class JaasDualAuthenticationNetworkConnectorBrokerTest extends BrokerTest
         ConnectionContext mockedConnectionContext = getMockedConnectionContextWithSSL();
         ConnectionInfo mockedConnectionInfo = getMockedConnectionInfo();
 
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.addConnection(mockedConnectionContext, mockedConnectionInfo);
     }
 
@@ -79,13 +79,13 @@ public class JaasDualAuthenticationNetworkConnectorBrokerTest extends BrokerTest
     public void canAddConnectionForProperties() throws Exception {
         ConnectionInfo mockedConnectionInfo = getMockedConnectionInfo();
 
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.addConnection(Mockito.mock(ConnectionContext.class), mockedConnectionInfo);
     }
 
     @Test
     public void canRemoveConnection() throws Exception {
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.removeConnection(Mockito.mock(ConnectionContext.class), Mockito.mock(ConnectionInfo.class), null);
     }
 
@@ -94,7 +94,7 @@ public class JaasDualAuthenticationNetworkConnectorBrokerTest extends BrokerTest
         ConnectionContext mockedConnectionContext = getMockedConnectionContext();
         ConnectionInfo mockedConnectionInfo = getMockedConnectionInfo();
 
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.removeConnection(mockedConnectionContext, mockedConnectionInfo, null);
     }
 
@@ -102,13 +102,13 @@ public class JaasDualAuthenticationNetworkConnectorBrokerTest extends BrokerTest
     public void canRemoveConnectionForProperties() throws Exception {
         ConnectionInfo mockedConnectionInfo = getMockedConnectionInfo();
 
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.removeConnection(Mockito.mock(ConnectionContext.class), mockedConnectionInfo, null);
     }
 
     @Test
     public void canRemoveDestination() throws Exception {
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.removeDestination(Mockito.mock(ConnectionContext.class), Mockito.mock(ActiveMQDestination.class), 0);
     }
 
@@ -116,31 +116,31 @@ public class JaasDualAuthenticationNetworkConnectorBrokerTest extends BrokerTest
     public void canRemoveDestinationForSSL() throws Exception {
         ConnectionContext mockedConnectionContext = getMockedConnectionContext();
 
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.removeDestination(mockedConnectionContext, Mockito.mock(ActiveMQDestination.class), 0);
     }
 
     @Test
     public void canRemoveDestinationForProperties() throws Exception {
-        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        Broker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.removeDestination(Mockito.mock(ConnectionContext.class), Mockito.mock(ActiveMQDestination.class), 0);
     }
 
     @Test
     public void canAuthenticateForSSL() {
-        AuthenticationBroker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        AuthenticationBroker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.authenticate(null, null, new ArrayList<X509Certificate>().toArray(new X509Certificate[0]));
     }
 
     @Test
     public void canAuthenticateForSSLWithEmptyUsername() {
-        AuthenticationBroker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        AuthenticationBroker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.authenticate(" ", null, new ArrayList<X509Certificate>().toArray(new X509Certificate[0]));
     }
 
     @Test
     public void canAuthenticateForProperties() {
-        AuthenticationBroker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL, null);
+        AuthenticationBroker broker = new JaasDualAuthenticationNetworkConnectorBroker(new EmptyBroker(), JAAS_NON_SSL, JAAS_SSL);
         broker.authenticate("admin", "admin", new ArrayList<X509Certificate>().toArray(new X509Certificate[0]));
     }
 }

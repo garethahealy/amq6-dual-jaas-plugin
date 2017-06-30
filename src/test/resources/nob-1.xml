@@ -37,11 +37,11 @@
        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
        xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
            http://activemq.apache.org/schema/core http://activemq.apache.org/schema/core/activemq-core.xsd">
-    
+
     <!--
         The <broker> element is used to configure the ActiveMQ broker.
     -->
-    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="testing" dataDirectory="target/data">
+    <broker xmlns="http://activemq.apache.org/schema/core" brokerName="nob1" dataDirectory="target/data1">
 
         <destinations>
             <queue physicalName="GROUP1-QUEUE"/>
@@ -109,13 +109,15 @@
                 (i.e. messageTTL="-1") but create demand subscription only to the next connected
                 broker (i.e. consumerTTL="1"). See AMQ-4607.
             -->
-            <networkConnector name="network-topic" uri="static:(ssl://localhost:61617)?transportType=ssl" messageTTL="-1" consumerTTL="1">
+            <networkConnector name="network-topic" uri="static:(ssl://localhost:61619)?transportType=ssl"
+                              messageTTL="-1" consumerTTL="1">
                 <dynamicallyIncludedDestinations>
                     <topic physicalName=">"/>
                 </dynamicallyIncludedDestinations>
             </networkConnector>
 
-            <networkConnector name="network-queue" uri="static:(ssl://localhost:61617)?transportType=ssl" messageTTL="-1" consumerTTL="1" conduitSubscriptions="false">
+            <networkConnector name="network-queue" uri="static:(ssl://localhost:61619)?transportType=ssl"
+                              messageTTL="-1" consumerTTL="1" conduitSubscriptions="false">
                 <dynamicallyIncludedDestinations>
                     <queue physicalName=">"/>
                 </dynamicallyIncludedDestinations>
@@ -130,7 +132,7 @@
             http://activemq.apache.org/persistence.html
         -->
         <persistenceAdapter>
-            <kahaDB directory="target/data/kahadb" />
+            <kahaDB directory="target/data1/kahadb" />
         </persistenceAdapter>
 
         <plugins>
@@ -183,7 +185,7 @@
             http://activemq.apache.org/configuring-transports.html
         -->
         <transportConnectors>
-            <transportConnector name="ssl" uri="ssl://0.0.0.0:61617?transport.closeAsync=false&amp;wantClientAuth=true&amp;needClientAuth=true" />
+            <transportConnector name="ssl" uri="ssl://0.0.0.0:61618?transport.closeAsync=false&amp;wantClientAuth=true&amp;needClientAuth=true" />
         </transportConnectors>
 
         <sslContext>

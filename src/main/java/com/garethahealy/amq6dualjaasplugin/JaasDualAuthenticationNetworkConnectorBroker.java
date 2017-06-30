@@ -25,13 +25,20 @@ import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerFilter;
 import org.apache.activemq.broker.ConnectionContext;
 import org.apache.activemq.broker.Connector;
+import org.apache.activemq.broker.EmptyBroker;
+import org.apache.activemq.broker.ProducerBrokerExchange;
+import org.apache.activemq.broker.TransactionBroker;
 import org.apache.activemq.broker.TransportConnectionState;
 import org.apache.activemq.broker.TransportConnector;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.Subscription;
 import org.apache.activemq.command.ActiveMQDestination;
 import org.apache.activemq.command.ConnectionInfo;
+import org.apache.activemq.command.ConsumerInfo;
+import org.apache.activemq.command.DestinationInfo;
+import org.apache.activemq.command.Message;
+import org.apache.activemq.command.ProducerInfo;
 import org.apache.activemq.security.AuthenticationBroker;
-import org.apache.activemq.security.AuthorizationBroker;
-import org.apache.activemq.security.AuthorizationMap;
 import org.apache.activemq.security.JaasAuthenticationBroker;
 import org.apache.activemq.security.JaasCertificateAuthenticationBroker;
 import org.apache.activemq.security.SecurityContext;
@@ -46,16 +53,13 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
     private final JaasCertificateAuthenticationBroker certificateAuthenticationBroker;
     private final JaasAuthenticationBroker authenticationBroker;
 
-    public JaasDualAuthenticationNetworkConnectorBroker(Broker next, String jaasConfiguration, String jaasCertificateConfiguration,
-                                                        AuthorizationMap jaasConfigurationAuthorizationMap) {
+    public JaasDualAuthenticationNetworkConnectorBroker(Broker next, String jaasConfiguration, String jaasCertificateConfiguration) {
         super(next);
 
         LOG.info("Loading {} - {} / {}", JaasDualAuthenticationNetworkConnectorBroker.class.getCanonicalName(), jaasConfiguration, jaasCertificateConfiguration);
 
-        Broker jaasConfigurationAuthorizationBroker = jaasConfigurationAuthorizationMap == null ? next : new AuthorizationBroker(next, jaasConfigurationAuthorizationMap);
-
-        this.authenticationBroker = new LoggingJaasAuthenticationBroker(jaasConfigurationAuthorizationBroker, jaasConfiguration);
-        this.certificateAuthenticationBroker = new JaasCertificateAuthenticationBroker(next, jaasCertificateConfiguration);
+        this.authenticationBroker = new LoggingJaasAuthenticationBroker(next, jaasConfiguration);
+        this.certificateAuthenticationBroker = new JaasCertificateAuthenticationBroker(new EmptyBroker(), jaasCertificateConfiguration);
     }
 
     public JaasCertificateAuthenticationBroker getCertificateAuthenticationBroker() {
@@ -93,6 +97,29 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
     }
 
     @Override
+    public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
+        LOG.info("-> authenticate; {}", username);
+
+        if (username == null || username.trim().length() <= 0) {
+            return this.certificateAuthenticationBroker.authenticate(username, password, peerCertificates);
+        } else {
+            return this.authenticationBroker.authenticate(username, password, peerCertificates);
+        }
+    }
+
+    @Override
+    public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean create) throws Exception {
+        LOG.info("-> addDestination; {}", destination.getPhysicalName());
+
+        if (isNetworkConnector(context)) {
+            Broker transactionBroker = getAdaptor(TransactionBroker.class);
+            return transactionBroker.addDestination(context, destination, create);
+        } else {
+            return super.addDestination(context, destination, create);
+        }
+    }
+
+    @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
         LOG.info("-> removeDestination; {}", context.getClientId());
 
@@ -104,13 +131,26 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
     }
 
     @Override
-    public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
-        LOG.info("-> authenticate; {}", username);
+    public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
+        LOG.info("addConsumer");
 
-        if (username == null || username.trim().length() <= 0) {
-            return this.certificateAuthenticationBroker.authenticate(username, password, peerCertificates);
+        if (isNetworkConnector(context)) {
+            Broker transactionBroker = getAdaptor(TransactionBroker.class);
+            return transactionBroker.addConsumer(context, info);
         } else {
-            return this.authenticationBroker.authenticate(username, password, peerCertificates);
+            return super.addConsumer(context, info);
+        }
+    }
+
+    @Override
+    public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
+        LOG.info("-> send; {}", messageSend.getMessageId());
+
+        if (isNetworkConnector(producerExchange.getConnectionContext())) {
+            Broker transactionBroker = getAdaptor(TransactionBroker.class);
+            transactionBroker.send(producerExchange, messageSend);
+        } else {
+            super.send(producerExchange, messageSend);
         }
     }
 
@@ -127,7 +167,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
             sslCapable = true;
         }
 
-        LOG.info("-> isSSL; {}", sslCapable);
+        LOG.info("---> isSSL; {}", sslCapable);
         return sslCapable;
     }
 
@@ -144,7 +184,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
             isNetworkConnection = context.getConnectionId().getValue().contains("->");
         }
 
-        LOG.info("-> isNetworkConnector; {}", isNetworkConnection);
+        LOG.info("---> isNetworkConnector; {}", isNetworkConnection);
 
         return isNetworkConnection;
     }

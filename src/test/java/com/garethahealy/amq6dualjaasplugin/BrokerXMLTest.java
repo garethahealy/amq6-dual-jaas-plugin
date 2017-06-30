@@ -22,7 +22,7 @@ package com.garethahealy.amq6dualjaasplugin;
 import org.apache.activemq.broker.Broker;
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.junit.EmbeddedActiveMQBroker;
-import org.apache.activemq.security.AuthorizationBroker;
+import org.apache.activemq.security.AuthorizationPlugin;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -30,21 +30,39 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-public class ActiveMQXMLTest {
+public class BrokerXMLTest {
 
     @Rule
-    public EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker("xbean:activemq.xml");
+    public EmbeddedActiveMQBroker broker = new EmbeddedActiveMQBroker("xbean:activemq.xml") {
+        @Override
+        public void start() {
+            try {
+                //NOTE: Default creates an internal client which doesnt support username auth. We skip it here
+                this.configure();
+                getBrokerService().start();
+            } catch (Exception ex) {
+                throw new RuntimeException("Exception encountered starting embedded ActiveMQ broker: {}" + this.getBrokerName(), ex);
+            }
+
+            getBrokerService().waitUntilStarted();
+        }
+    };
 
     @Test
     public void canStartBrokerFromXML() throws Exception {
         assertEquals("testing", broker.getBrokerName());
         assertNotNull(broker.getBrokerService());
+        assertTrue(broker.getBrokerService().isStarted());
         assertNotNull(broker.getBrokerService().getBroker());
         assertNotNull(broker.getBrokerService().getPlugins());
-        assertTrue(broker.getBrokerService().getPlugins().length == 1);
+
+        assertTrue(broker.getBrokerService().getPlugins().length == 3);
 
         for (BrokerPlugin current : broker.getBrokerService().getPlugins()) {
-            assertTrue(current instanceof JaasDualAuthenticationNetworkConnectorPlugin);
+
+            assertTrue(current instanceof AuthorizationPlugin
+                       || current instanceof JaasDualAuthenticationNetworkConnectorPlugin
+                       || current instanceof NoBAuthorizationDestinationInterceptorPlugin);
         }
 
         Broker first = broker.getBrokerService().getBroker();
@@ -56,8 +74,5 @@ public class ActiveMQXMLTest {
         JaasDualAuthenticationNetworkConnectorBroker dualBroker = (JaasDualAuthenticationNetworkConnectorBroker)next;
         assertNotNull(dualBroker.getAuthenticationBroker());
         assertNotNull(dualBroker.getCertificateAuthenticationBroker());
-
-        Broker authorizationBroker = dualBroker.getAuthenticationBroker().getAdaptor(AuthorizationBroker.class);
-        assertNotNull(authorizationBroker);
     }
 }

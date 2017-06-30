@@ -19,25 +19,22 @@
  */
 package com.garethahealy.amq6dualjaasplugin;
 
-import org.apache.activemq.broker.Broker;
-import org.apache.activemq.security.JaasAuthenticationPlugin;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.security.AuthorizationBroker;
+import org.apache.activemq.security.AuthorizationDestinationInterceptor;
 
-public class JaasDualAuthenticationNetworkConnectorPlugin extends JaasAuthenticationPlugin {
+public class NoBAuthorizationDestinationInterceptor extends AuthorizationDestinationInterceptor {
 
-    private String jaasCertificateConfiguration = "activemq-cert";
+    private final AuthorizationBroker broker;
+
+    public NoBAuthorizationDestinationInterceptor(AuthorizationBroker broker) {
+        super(broker);
+
+        this.broker = broker;
+    }
 
     @Override
-    public Broker installPlugin(Broker broker) {
-        initialiseJaas();
-
-        return new JaasDualAuthenticationNetworkConnectorBroker(broker, configuration, jaasCertificateConfiguration);
-    }
-
-    public String getJaasCertificateConfiguration() {
-        return jaasCertificateConfiguration;
-    }
-
-    public void setJaasCertificateConfiguration(String jaasCertificateConfiguration) {
-        this.jaasCertificateConfiguration = jaasCertificateConfiguration;
+    public Destination intercept(Destination destination) {
+        return new NoBAuthorizationDestinationFilter(destination, broker);
     }
 }

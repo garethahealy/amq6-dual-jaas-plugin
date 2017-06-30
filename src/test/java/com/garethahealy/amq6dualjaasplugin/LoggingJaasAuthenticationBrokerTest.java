@@ -36,7 +36,7 @@ public class LoggingJaasAuthenticationBrokerTest extends BrokerTestSupport {
 
     @BeforeClass
     public static void setUp() throws Exception {
-        createLoginConfig();
+        createStubbedLoginConfig();
     }
 
     @Test

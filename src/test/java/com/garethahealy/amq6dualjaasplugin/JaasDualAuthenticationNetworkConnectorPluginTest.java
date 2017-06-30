@@ -21,12 +21,9 @@ package com.garethahealy.amq6dualjaasplugin;
 
 import org.apache.activemq.broker.BrokerPlugin;
 import org.apache.activemq.broker.EmptyBroker;
-import org.apache.activemq.security.AuthorizationMap;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotNull;
 
 public class JaasDualAuthenticationNetworkConnectorPluginTest {
 
@@ -42,13 +39,5 @@ public class JaasDualAuthenticationNetworkConnectorPluginTest {
         plugin.setJaasCertificateConfiguration("test");
 
         assertEquals("test", plugin.getJaasCertificateConfiguration());
-    }
-
-    @Test
-    public void canGetSetJaasConfigurationAuthorizationMap() throws Exception {
-        JaasDualAuthenticationNetworkConnectorPlugin plugin = new JaasDualAuthenticationNetworkConnectorPlugin();
-        plugin.setJaasConfigurationAuthorizationMap(Mockito.mock(AuthorizationMap.class));
-
-        assertNotNull(plugin.getJaasConfigurationAuthorizationMap());
     }
 }

@@ -35,15 +35,15 @@ public class PropertiesLoaderTest extends PropertiesLoader {
 
     @Test
     public void canGetUsers() {
-        URL url = PropertiesLoaderTest.class.getResource("/user.properties");
+        URL url = PropertiesLoaderTest.class.getResource("/users.properties");
         String root = FilenameUtils.getPath(url.getPath());
         Map<String, String> options = new HashMap<String, String>();
         options.put("baseDir", "/" + root);
 
-        Properties users = load("user.properties", "user.properties", options).getProps();
+        Properties users = load("users.properties", "users.properties", options).getProps();
 
         assertNotNull(users);
-        assertEquals(1, users.size());
+        assertEquals(3, users.size());
         assertEquals("CN=broker-amqtest-amq-tcp-ssl, O=GarethHealy, C=UK", users.get("networkconnector"));
     }
 }
