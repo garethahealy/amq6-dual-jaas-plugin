@@ -19,17 +19,9 @@
  */
 package com.garethahealy.amq6dualjaasplugin;
 
-import java.util.Arrays;
-
 import org.apache.activemq.broker.Broker;
-import org.apache.activemq.filter.DefaultDestinationMapEntry;
-import org.apache.activemq.filter.DestinationMapEntry;
-import org.apache.activemq.security.AuthorizationEntry;
 import org.apache.activemq.security.AuthorizationMap;
-import org.apache.activemq.security.DefaultAuthorizationMap;
 import org.apache.activemq.security.JaasAuthenticationPlugin;
-import org.apache.activemq.security.SimpleAuthorizationMap;
-import org.apache.activemq.security.TempDestinationAuthorizationEntry;
 
 public class JaasDualAuthenticationNetworkConnectorPlugin extends JaasAuthenticationPlugin {
 
@@ -41,34 +33,6 @@ public class JaasDualAuthenticationNetworkConnectorPlugin extends JaasAuthentica
         initialiseJaas();
 
         return new JaasDualAuthenticationNetworkConnectorBroker(broker, configuration, jaasCertificateConfiguration, jaasConfigurationAuthorizationMap);
-    }
-
-    public AuthorizationMap defaultAuthorizationMap() {
-        TempDestinationAuthorizationEntry tempDestination = new TempDestinationAuthorizationEntry();
-        AuthorizationEntry authorizationEntry = new AuthorizationEntry();
-        try {
-            tempDestination.setAdmin("admin");
-            authorizationEntry.setAdmin("admin");
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-
-        //queue names
-        DefaultDestinationMapEntry devQueue = new DefaultDestinationMapEntry();
-        devQueue.setQueue("DEV.>");
-        devQueue.setValue(authorizationEntry);
-
-        DefaultAuthorizationMap adminACLs = new DefaultAuthorizationMap(Arrays.asList((DestinationMapEntry)devQueue));
-        DefaultAuthorizationMap readACLs = new DefaultAuthorizationMap(Arrays.asList((DestinationMapEntry)devQueue));
-        DefaultAuthorizationMap writeACLs = new DefaultAuthorizationMap(Arrays.asList((DestinationMapEntry)devQueue));
-
-        SimpleAuthorizationMap simpleAuthorizationMap = new SimpleAuthorizationMap();
-        simpleAuthorizationMap.setAdminACLs(adminACLs);
-        simpleAuthorizationMap.setReadACLs(readACLs);
-        simpleAuthorizationMap.setWriteACLs(writeACLs);
-        simpleAuthorizationMap.setTempDestinationAuthorizationEntry(tempDestination);
-
-        return simpleAuthorizationMap;
     }
 
     public String getJaasCertificateConfiguration() {
