@@ -19,6 +19,8 @@
  */
 package com.garethahealy.amq6dualjaasplugin;
 
+import java.util.concurrent.TimeUnit;
+
 import javax.jms.JMSSecurityException;
 import javax.jms.TextMessage;
 
@@ -122,7 +124,7 @@ public class AuthorizationsTest extends BrokerTestSupport {
         ActiveMQQueueReceiverResource receiver = new ActiveMQQueueReceiverResource("GROUP1-QUEUE", sslConnectionFactory);
         receiver.start();
 
-        TextMessage message = receiver.receiveTextMessage();
+        TextMessage message = receiver.receiveTextMessage(TimeUnit.SECONDS.toMillis(10));
 
         assertNotNull(message);
         assertNotNull(message.getText());

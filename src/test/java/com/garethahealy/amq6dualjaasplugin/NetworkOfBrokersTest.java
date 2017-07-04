@@ -19,20 +19,25 @@
  */
 package com.garethahealy.amq6dualjaasplugin;
 
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import javax.jms.TextMessage;
+import javax.management.ObjectName;
 
 import org.apache.activemq.ActiveMQSslConnectionFactory;
+import org.apache.activemq.broker.jmx.DestinationView;
+import org.apache.activemq.broker.jmx.ManagedRegionBroker;
+import org.apache.activemq.broker.region.Destination;
+import org.apache.activemq.broker.region.RegionBroker;
 import org.apache.activemq.junit.ActiveMQDynamicQueueSenderResource;
 import org.apache.activemq.junit.ActiveMQQueueReceiverResource;
 import org.apache.activemq.junit.EmbeddedActiveMQBroker;
-import org.apache.activemq.network.NetworkBridge;
 import org.apache.activemq.network.NetworkConnector;
-import org.apache.activemq.security.AuthorizationBroker;
-import org.apache.activemq.security.AuthorizationDestinationFilter;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,41 +86,13 @@ public class NetworkOfBrokersTest extends BrokerTestSupport {
     }
 
     @Test
-    public void canStartNobBrokersFromXML() throws Exception {
-        //NOTE: Wait for the NoBs to connect - probably a better way, but its easy, innit!
-        TimeUnit.SECONDS.sleep(5);
-
-        assertNotNull(brokerNob1);
-        assertNotNull(brokerNob1.getBrokerService());
-        assertTrue(brokerNob1.getBrokerService().isStarted());
-        assertNotNull(brokerNob1.getBrokerService().getBroker());
-        assertNotNull(brokerNob1.getBrokerService().getNetworkConnectors());
-        assertTrue(brokerNob1.getBrokerService().getNetworkConnectors().size() == 2);
-
-        assertNotNull(brokerNob2);
-        assertNotNull(brokerNob2.getBrokerService());
-        assertTrue(brokerNob2.getBrokerService().isStarted());
-        assertNotNull(brokerNob2.getBrokerService().getBroker());
-        assertNotNull(brokerNob2.getBrokerService().getNetworkConnectors());
-        assertTrue(brokerNob2.getBrokerService().getNetworkConnectors().size() == 2);
-
-        for (NetworkConnector current : brokerNob1.getBrokerService().getNetworkConnectors()) {
-            assertTrue(current.isStarted());
-            assertNotNull(current.activeBridges());
-            assertTrue(String.valueOf(current.activeBridges().size()), current.activeBridges().size() == 1);
-        }
-
-        for (NetworkConnector current : brokerNob2.getBrokerService().getNetworkConnectors()) {
-            assertTrue(current.isStarted());
-            assertNotNull(current.activeBridges());
-            assertTrue(String.valueOf(current.activeBridges().size()), current.activeBridges().size() == 1);
-        }
-    }
-
-    @Test
     public void canSendToOneBrokerAndConsumeForOther() throws Exception {
-        //NOTE: Wait for the NoBs to connect - probably a better way, but its easy, innit!
-        TimeUnit.SECONDS.sleep(5);
+        ExecutorService pool = Executors.newFixedThreadPool(1);
+        Future<Boolean> future = pool.submit(new NobConnectedCallable());
+        Boolean isReady = future.get();
+        if (!isReady) {
+            throw new RuntimeException("NoBs are not ready...");
+        }
 
         ActiveMQSslConnectionFactory nob1ConnectionFactory = new ActiveMQSslConnectionFactory();
         nob1ConnectionFactory.setKeyStore(getClass().getClassLoader().getResource("generated-certs/amq-client.ks").getFile());
@@ -129,10 +106,23 @@ public class NetworkOfBrokersTest extends BrokerTestSupport {
         ActiveMQDynamicQueueSenderResource sender1 = new ActiveMQDynamicQueueSenderResource("GROUP1-QUEUE", nob1ConnectionFactory);
         sender1.start();
 
-        sender1.sendMessage("test");
+        TextMessage sentMessage = sender1.sendMessage("test");
 
-        TimeUnit.SECONDS.sleep(5);
-        
+        assertNotNull(sentMessage);
+        assertNotNull(sentMessage.getText());
+        assertEquals("test", sentMessage.getText());
+
+        Boolean hasCheckedNob1Count = false;
+        ManagedRegionBroker nob1ManagedRegionBroker = (ManagedRegionBroker)brokerNob1.getBrokerService().getRegionBroker().getAdaptor(ManagedRegionBroker.class);
+        for (DestinationView current : nob1ManagedRegionBroker.getQueueViews().values()) {
+            if (current.getName().equalsIgnoreCase("GROUP1-QUEUE")) {
+                assertTrue(current.getEnqueueCount() == 1);
+                hasCheckedNob1Count = true;
+            }
+        }
+
+        assertTrue(hasCheckedNob1Count);
+
         ActiveMQSslConnectionFactory nob2ConnectionFactory = new ActiveMQSslConnectionFactory();
         nob2ConnectionFactory.setKeyStore(getClass().getClassLoader().getResource("generated-certs/amq-client.ks").getFile());
         nob2ConnectionFactory.setKeyStorePassword("password");
@@ -145,14 +135,38 @@ public class NetworkOfBrokersTest extends BrokerTestSupport {
         ActiveMQQueueReceiverResource receiver2 = new ActiveMQQueueReceiverResource("GROUP1-QUEUE", nob2ConnectionFactory);
         receiver2.start();
 
-        TimeUnit.SECONDS.sleep(5);
+        TextMessage receivedMessage = receiver2.receiveTextMessage(TimeUnit.SECONDS.toMillis(10));
 
-        TextMessage message = receiver2.receiveTextMessage();
+        assertNotNull(receivedMessage);
+        assertNotNull(receivedMessage.getText());
+        assertEquals("test", receivedMessage.getText());
+    }
 
-        //AuthorizationDestinationFilter ss;
-        AuthorizationBroker ss;
-        assertNotNull(message);
-        assertNotNull(message.getText());
-        assertEquals("test", message.getText());
+    private class NobConnectedCallable implements Callable<Boolean> {
+
+        @Override
+        public Boolean call() throws Exception {
+            long expiration = Math.max(0, 600000L + System.currentTimeMillis());
+            Boolean networkConnectsStarted = false;
+            while (!networkConnectsStarted && expiration > System.currentTimeMillis()) {
+
+                Boolean bridgeOneActive = false;
+                Boolean networkConnectorsOneIsTwo = brokerNob1.getBrokerService().getNetworkConnectors().size() == 2;
+                for (NetworkConnector current : brokerNob1.getBrokerService().getNetworkConnectors()) {
+                    bridgeOneActive = current.isStarted() && current.activeBridges().size() == 1;
+                }
+
+                Boolean bridgeTwoActive = false;
+                Boolean networkConnectorsTwoIsTwo = brokerNob2.getBrokerService().getNetworkConnectors().size() == 2;
+                for (NetworkConnector current : brokerNob2.getBrokerService().getNetworkConnectors()) {
+                    bridgeTwoActive = current.isStarted() && current.activeBridges().size() == 1;
+                }
+
+                networkConnectsStarted = networkConnectorsOneIsTwo && networkConnectorsTwoIsTwo
+                                         && bridgeOneActive && bridgeTwoActive;
+            }
+
+            return networkConnectsStarted;
+        }
     }
 }

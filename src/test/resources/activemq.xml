@@ -46,6 +46,12 @@
         <destinations>
             <queue physicalName="GROUP1-QUEUE"/>
             <queue physicalName="GROUP2-QUEUE"/>
+
+            <topic physicalName="ActiveMQ.Advisory.Connection"/>
+            <topic physicalName="ActiveMQ.Advisory.Consumer.Queue.GROUP1-QUEUE"/>
+            <topic physicalName="ActiveMQ.Advisory.Consumer.Queue.GROUP2-QUEUE"/>
+            <topic physicalName="ActiveMQ.Advisory.Producer.Queue.GROUP1-QUEUE"/>
+            <topic physicalName="ActiveMQ.Advisory.Producer.Queue.GROUP2-QUEUE"/>
         </destinations>
 
         <destinationPolicy>
@@ -140,7 +146,9 @@
                         <authorizationEntries>
                             <authorizationEntry queue="GROUP1-QUEUE" read="GROUP1" write="GROUP1" admin="GROUP1"/>
                             <authorizationEntry queue="GROUP2-QUEUE" read="GROUP2" write="GROUP2" admin="GROUP2"/>
-                            <authorizationEntry topic="ActiveMQ.Advisory.>" read="*" write="*" admin="*"/>
+
+                            <authorizationEntry topic="ActiveMQ.Advisory.>" read="GROUP1"/>
+                            <authorizationEntry topic="ActiveMQ.Advisory.>" read="GROUP2"/>
                         </authorizationEntries>
                     </authorizationMap>
                 </map>

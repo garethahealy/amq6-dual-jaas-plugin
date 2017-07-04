@@ -58,7 +58,7 @@ public class NoBAuthorizationDestinationInterceptorPlugin implements BrokerPlugi
                     NoBAuthorizationDestinationInterceptor newInterceptor = new NoBAuthorizationDestinationInterceptor(
                         (AuthorizationBroker)broker.getAdaptor(AuthorizationBroker.class));
 
-                    List<DestinationInterceptor> tempList = new ArrayList<DestinationInterceptor>();
+                    List<DestinationInterceptor> tempList = new ArrayList<>();
                     Collections.replaceAll(tempList, oldInterceptor, newInterceptor);
 
                     compositeInterceptor.setInterceptors(tempList.toArray(new DestinationInterceptor[tempList.size()]));
