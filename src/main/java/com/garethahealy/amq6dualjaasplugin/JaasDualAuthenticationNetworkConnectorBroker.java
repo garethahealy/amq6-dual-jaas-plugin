@@ -56,7 +56,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
 
         LOG.info("Loading {} - {} / {}", JaasDualAuthenticationNetworkConnectorBroker.class.getCanonicalName(), jaasConfiguration, jaasCertificateConfiguration);
 
-        this.authenticationBroker = new LoggingJaasAuthenticationBroker(next, jaasConfiguration);
+        this.authenticationBroker = new JaasAuthenticationBroker(next, jaasConfiguration);
         this.certificateAuthenticationBroker = new JaasCertificateAuthenticationBroker(new EmptyBroker(), jaasCertificateConfiguration);
     }
 
@@ -70,7 +70,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
 
     @Override
     public void addConnection(ConnectionContext context, ConnectionInfo info) throws Exception {
-        LOG.info("addConnection; {}", context.getClientId());
+        LOG.debug("addConnection; {}", context.getClientId());
 
         if (isSSLConnector(context, info)) {
             if (isNetworkConnector(context)) {
@@ -83,7 +83,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
 
     @Override
     public void removeConnection(ConnectionContext context, ConnectionInfo info, Throwable error) throws Exception {
-        LOG.info("removeConnection; {}", context.getClientId());
+        LOG.debug("removeConnection; {}", context.getClientId());
 
         if (isSSLConnector(context, info)) {
             if (isNetworkConnector(context)) {
@@ -96,7 +96,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
 
     @Override
     public SecurityContext authenticate(String username, String password, X509Certificate[] peerCertificates) throws SecurityException {
-        LOG.info("-> authenticate; {}", username);
+        LOG.debug("-> authenticate; {}", username);
 
         if (username == null || username.trim().length() <= 0) {
             return this.certificateAuthenticationBroker.authenticate(username, password, peerCertificates);
@@ -107,7 +107,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
 
     @Override
     public Destination addDestination(ConnectionContext context, ActiveMQDestination destination, boolean create) throws Exception {
-        LOG.info("-> addDestination; {}", destination.getPhysicalName());
+        LOG.debug("-> addDestination; {}", destination.getPhysicalName());
 
         if (isNetworkConnector(context)) {
             Broker transactionBroker = getAdaptor(TransactionBroker.class);
@@ -119,7 +119,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
 
     @Override
     public void removeDestination(ConnectionContext context, ActiveMQDestination destination, long timeout) throws Exception {
-        LOG.info("-> removeDestination; {}", context.getClientId());
+        LOG.debug("-> removeDestination; {}", context.getClientId());
 
         if (isNetworkConnector(context)) {
             this.certificateAuthenticationBroker.removeDestination(context, destination, timeout);
@@ -130,7 +130,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
 
     @Override
     public Subscription addConsumer(ConnectionContext context, ConsumerInfo info) throws Exception {
-        LOG.info("addConsumer");
+        LOG.debug("addConsumer");
 
         if (isNetworkConnector(context)) {
             Broker transactionBroker = getAdaptor(TransactionBroker.class);
@@ -142,7 +142,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
 
     @Override
     public void send(ProducerBrokerExchange producerExchange, Message messageSend) throws Exception {
-        LOG.info("-> send; {}", messageSend.getMessageId());
+        LOG.debug("-> send; {}", messageSend.getMessageId());
 
         if (isNetworkConnector(producerExchange.getConnectionContext())) {
             Broker transactionBroker = getAdaptor(TransactionBroker.class);
@@ -165,7 +165,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
             sslCapable = true;
         }
 
-        LOG.info("---> isSSL; {}", sslCapable);
+        LOG.debug("---> isSSL; {}", sslCapable);
         return sslCapable;
     }
 
@@ -182,7 +182,7 @@ public class JaasDualAuthenticationNetworkConnectorBroker extends BrokerFilter i
             isNetworkConnection = context.getConnectionId().getValue().contains("->");
         }
 
-        LOG.info("---> isNetworkConnector; {}", isNetworkConnection);
+        LOG.debug("---> isNetworkConnector; {}", isNetworkConnection);
 
         return isNetworkConnection;
     }

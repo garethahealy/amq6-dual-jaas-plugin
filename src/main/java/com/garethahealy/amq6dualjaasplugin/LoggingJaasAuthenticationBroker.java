@@ -37,7 +37,7 @@ public class LoggingJaasAuthenticationBroker extends JaasAuthenticationBroker {
 
     @Override
     public SecurityContext authenticate(String username, String password, X509Certificate[] certificates) throws SecurityException {
-        LOG.info("authenticate: {} / {}", username, password);
+        LOG.debug("authenticate: {} / {}", username, password);
 
         return super.authenticate(username, password, certificates);
     }
